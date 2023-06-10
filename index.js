@@ -26,14 +26,31 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     const courseCollection = client.db("Dance_School").collection("Cart");
+    const userCollection = client.db("Dance_School").collection("user");
 
+    /// POST user
+    app.post("/user", async(req, res)=>{
+        const user = req.body;
+        console.log(user)
+        const query = { email: user.email }
+        const existingUser = await userCollection.findOne(query);
+        if(existingUser){
+          return res.send({message: "Already Added this user info"})
+        }
+        else{
+          const result = await userCollection.insertOne(user);
+          res.send(result);
+        }
+    })
+
+    /// POST course 
     app.post("/course", async(req, res) =>{
         const body = req.body;
         const result = await courseCollection.insertOne(body)
         res.send(result);
     })
 
-    ////
+    /// GET course email query
     app.get("/course", async(req, res) =>{
        const email = req.query.email;
        if(!email){
@@ -46,11 +63,21 @@ async function run() {
         }
     })
 
+    /// DELETE course
     app.delete("/course/:id", async(req, res) =>{
       const id = req.params.id;
-      console.log(id)
+      // console.log(id)
       const query = { _id: new ObjectId(id) }
       const result = await courseCollection.deleteOne(query)
+      res.send(result)
+    })
+
+    //GET payments
+    app.get("/payment/:id", async(req, res) =>{
+      const id = req.params.id;
+      // console.log(id)
+      const query = { _id: new ObjectId(id) }
+      const result = await courseCollection.findOne(query)
       res.send(result)
     })
 
