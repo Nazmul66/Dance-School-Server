@@ -43,6 +43,26 @@ async function run() {
         }
     })
 
+    // GET user
+    app.get("/user", async(req, res) =>{
+       const result = await userCollection.find().toArray();
+       res.send(result)
+    })
+
+    /// PATCH user admin
+    app.patch("/users/admin/:id", async(req, res) =>{
+        const id = req.params.id;
+        console.log(id);
+        const filter = { _id: new ObjectId(id)}
+        const updateDoc = {
+             $set: {
+                role: 'admin'
+             }
+        }
+        const result = await userCollection.updateOne(filter, updateDoc)
+        res.send(result)
+    })
+
     /// POST course 
     app.post("/course", async(req, res) =>{
         const body = req.body;
