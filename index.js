@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express();
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const port = process.env.PORT || 5000;
 
@@ -25,12 +25,33 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
-    const CourseCollection = client.db("Dance_School").collection("Cart");
+    const courseCollection = client.db("Dance_School").collection("Cart");
 
     app.post("/course", async(req, res) =>{
         const body = req.body;
-        const result = await CourseCollection.insertOne(body)
+        const result = await courseCollection.insertOne(body)
         res.send(result);
+    })
+
+    ////
+    app.get("/course", async(req, res) =>{
+       const email = req.query.email;
+       if(!email){
+           return res.send([])
+       }
+        else{
+          const query = { email: email };
+          const result = await courseCollection.find(query).toArray();
+          res.send(result);
+        }
+    })
+
+    app.delete("/course/:id", async(req, res) =>{
+      const id = req.params.id;
+      console.log(id)
+      const query = { _id: new ObjectId(id) }
+      const result = await courseCollection.deleteOne(query)
+      res.send(result)
     })
 
 
