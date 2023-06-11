@@ -43,6 +43,7 @@ async function run() {
     // await client.connect();
     const courseCollection = client.db("Dance_School").collection("Cart");
     const userCollection = client.db("Dance_School").collection("user");
+    const classCollection = client.db("Dance_School").collection("addClass");
 
 
     /// jwt token
@@ -199,6 +200,23 @@ async function run() {
       const query = { _id: new ObjectId(id) }
       const result = await courseCollection.findOne(query)
       res.send(result)
+    })
+
+    // dashboard add class POST 
+    app.post("/class", async(req, res) =>{
+       const body = req.body;
+       const result = await classCollection.insertOne(body)
+       res.send(result)
+    })
+
+    app.get("/class", async(req, res) =>{
+        const email = req.query.email;
+        if(!email){
+          return res.send([])
+        }
+        const query = { email: email }
+        const result = await classCollection.find(query).toArray();
+        res.send(result)
     })
 
 
