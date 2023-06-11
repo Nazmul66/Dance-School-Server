@@ -10,6 +10,21 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+const verifyToken = (req, res, next) =>{
+    const authorization = req.headers.authorization;
+    if(!authorization){
+         return res.status(401).send({ error: true, message: "sai unauthorized access" })
+    }
+    const token = authorization.split(" ")[1];
+    jwt.verify(token, process.env.JWT_TOKEN, (err, decoded) =>{
+        if(err){
+          return res.status(403).send({ error: true, message: "bhai Forbidden access" })
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
+
 
 const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-tfmdlv0-shard-00-00.rnkzyeb.mongodb.net:27017,ac-tfmdlv0-shard-00-01.rnkzyeb.mongodb.net:27017,ac-tfmdlv0-shard-00-02.rnkzyeb.mongodb.net:27017/?ssl=true&replicaSet=atlas-8cmvoo-shard-0&authSource=admin&retryWrites=true&w=majority`;
 
@@ -33,9 +48,9 @@ async function run() {
     /// jwt token
     app.post("/jwt", async(req, res) =>{
       const user = req.body;
-      console.log(user)
+      // console.log(user)
       const token = jwt.sign(user, process.env.JWT_TOKEN, {
-         expiresIn: "1h"
+         expiresIn: '1h'
       })
       res.send({ token })
     })
@@ -59,6 +74,50 @@ async function run() {
     app.get("/user", async(req, res) =>{
        const result = await userCollection.find().toArray();
        res.send(result)
+    })
+
+    /// GET user admin
+    app.get("/users/admin/:email", verifyToken, async(req, res) =>{
+        const email = req.params.email;
+        const query = { email: email}
+
+        const decoded = req.decoded.email;
+        if(decoded !== email){
+            return res.status(403).send({admin: false})
+        }
+
+        const user = await userCollection.findOne(query);
+        const result = { admin: user?.role === "admin" }
+        res.send(result)
+    })
+
+    /// GET user instructor
+    app.get("/users/instructor/:email", verifyToken, async(req, res) =>{
+      const email = req.params.email;
+      const query = { email: email}
+
+      const decoded = req.decoded.email;
+      if(decoded !== email){
+          return res.status(403).send({instructor: false})
+      }
+
+      const user = await userCollection.findOne(query);
+      const result = { instructor: user?.role2 === "instructor" }
+      res.send(result)
+  })
+
+      /// GET user student
+      app.get("/users/student/:email", verifyToken, async(req, res) =>{
+        const email = req.params.email;
+        const query = { email: email}
+  
+        const decoded = req.decoded.email;
+        if(decoded !== email){
+            return res.status(403).send({instructor: false})
+        }
+  
+        const result = await userCollection.findOne(query);
+        res.send(result)
     })
 
     /// PATCH user admin
@@ -106,16 +165,22 @@ async function run() {
     })
 
     /// GET course email query
-    app.get("/course", async(req, res) =>{
+    app.get("/course", verifyToken, async(req, res) =>{
        const email = req.query.email;
+
        if(!email){
            return res.send([])
        }
-        else{
-          const query = { email: email };
-          const result = await courseCollection.find(query).toArray();
-          res.send(result);
-        }
+
+       const decoded = req.decoded.email
+       if(email !== decoded){
+         return res.status(403).send({ error: true, message: "Forbidden access" })
+       }
+
+        const query = { email: email };
+        const result = await courseCollection.find(query).toArray();
+        res.send(result);
+
     })
 
     /// DELETE course
