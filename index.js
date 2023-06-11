@@ -44,6 +44,7 @@ async function run() {
     const courseCollection = client.db("Dance_School").collection("Cart");
     const userCollection = client.db("Dance_School").collection("user");
     const classCollection = client.db("Dance_School").collection("addClass");
+    const instructorCollection = client.db("Dance_School").collection("instructor")
 
 
     /// jwt token
@@ -55,6 +56,13 @@ async function run() {
       })
       res.send({ token })
     })
+
+    /// top instructor section
+    app.get('/top_instructor', async(req, res) =>{
+        const result = await instructorCollection.find().toArray();
+        res.send(result)
+    })
+
 
     /// POST user
     app.post("/user", async(req, res)=>{
