@@ -103,7 +103,7 @@ async function run() {
       }
 
       const user = await userCollection.findOne(query);
-      const result = { instructor: user?.role2 === "instructor" }
+      const result = { instructor: user?.role === "instructor" }
       res.send(result)
   })
 
@@ -142,7 +142,7 @@ async function run() {
       const filter = { _id: new ObjectId(id)}
       const updateDoc = {
            $set: {
-              role2: 'instructor',
+              role: 'instructor',
            }
       }
       const result = await userCollection.updateOne(filter, updateDoc)
@@ -217,6 +217,21 @@ async function run() {
         const query = { email: email }
         const result = await classCollection.find(query).toArray();
         res.send(result)
+    })
+
+    /// all classes GET on class page
+    app.get("/classes", async(req, res) =>{
+       const result = await classCollection.find().toArray();
+       res.send(result)
+    })
+
+    /// all instructor page get method
+    app.get("/allInstructor", async(req, res) =>{
+      const role = req.query.role;
+      console.log(role)
+      const query = { role: role }
+      const result = await userCollection.find(query).toArray();
+      res.send(result)
     })
 
 
