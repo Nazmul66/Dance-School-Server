@@ -263,6 +263,12 @@ async function run() {
        res.send({ InsertResult, deleteResult })
     })
 
+    /// Get students successful payment data
+    app.get("/payments", async(req, res) =>{
+       const result = await paymentCollection.find().toArray();
+       res.send(result)
+    })
+
     //GET payments
     app.get("/payment/:id", async(req, res) =>{
       const id = req.params.id;
