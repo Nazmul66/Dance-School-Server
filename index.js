@@ -260,7 +260,14 @@ async function run() {
        const query = { _id : new ObjectId(payment.items) }
        const deleteResult = await courseCollection.deleteOne(query)
 
-       res.send({ InsertResult, deleteResult })
+       const updateDoc = {
+            $set: {
+                 seat: parseInt(payment.seat) - 1
+            }
+       }
+       const updateResult = await classCollection.updateOne(query, updateDoc)
+
+       res.send({ InsertResult, deleteResult, updateResult })
     })
 
     /// Get students successful payment data
