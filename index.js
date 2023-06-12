@@ -3,8 +3,8 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const stripe = require("stripe")(process.env.PAYMENT_SECRECT_KEY)
 require('dotenv').config()
+const stripe = require("stripe")(process.env.PAYMENT_SECRECT_KEY)
 const port = process.env.PORT || 5000;
 
 
@@ -46,6 +46,7 @@ async function run() {
     const userCollection = client.db("Dance_School").collection("user");
     const classCollection = client.db("Dance_School").collection("addClass");
     const instructorCollection = client.db("Dance_School").collection("instructor")
+    const paymentCollection = client.db("Dance_School").collection("payment")
 
 
     /// jwt token
@@ -237,6 +238,7 @@ async function run() {
     /// create payment intent
     app.post("/create-payment-intent", async(req, res) =>{
         const { price } = req.body;
+        // console.log(price)
         const money = price * 100;
         const paymentIntent = await stripe.paymentIntents.create({
           amount: money,
@@ -248,6 +250,19 @@ async function run() {
         })
     })
 
+    /// POST payment create
+    app.post("/payments", async(req, res) =>{
+       const payment =req.body;
+       console.log(payment)
+
+       const InsertResult = await paymentCollection.insertOne(payment)
+
+       const query = { _id : new ObjectId(payment.items) }
+       const deleteResult = await courseCollection.deleteOne(query)
+
+       res.send({ InsertResult, deleteResult })
+    })
+
     //GET payments
     app.get("/payment/:id", async(req, res) =>{
       const id = req.params.id;
@@ -256,7 +271,6 @@ async function run() {
       const result = await courseCollection.findOne(query)
       res.send(result)
     })
-
 
 
     // Send a ping to confirm a successful connection
