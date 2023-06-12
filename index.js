@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const stripe = require("stripe")(process.env.PAYMENT_SECRECT_KEY)
 require('dotenv').config()
 const port = process.env.PORT || 5000;
 
@@ -52,7 +53,7 @@ async function run() {
       const user = req.body;
       // console.log(user)
       const token = jwt.sign(user, process.env.JWT_TOKEN, {
-         expiresIn: '1h'
+         expiresIn: '10h'
       })
       res.send({ token })
     })
@@ -176,6 +177,7 @@ async function run() {
     /// GET course email query
     app.get("/course", verifyToken, async(req, res) =>{
        const email = req.query.email;
+       console.log(email)
 
        if(!email){
            return res.send([])
@@ -189,7 +191,6 @@ async function run() {
         const query = { email: email };
         const result = await courseCollection.find(query).toArray();
         res.send(result);
-
     })
 
     /// DELETE course
@@ -198,15 +199,6 @@ async function run() {
       // console.log(id)
       const query = { _id: new ObjectId(id) }
       const result = await courseCollection.deleteOne(query)
-      res.send(result)
-    })
-
-    //GET payments
-    app.get("/payment/:id", async(req, res) =>{
-      const id = req.params.id;
-      // console.log(id)
-      const query = { _id: new ObjectId(id) }
-      const result = await courseCollection.findOne(query)
       res.send(result)
     })
 
@@ -239,6 +231,29 @@ async function run() {
       console.log(role)
       const query = { role: role }
       const result = await userCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    /// create payment intent
+    app.post("/create-payment-intent", async(req, res) =>{
+        const { price } = req.body;
+        const money = price * 100;
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: money,
+           currency: "usd",
+           payment_method_types: ['card']
+        });
+        res.send({
+            clientSecret: paymentIntent.client_secret,
+        })
+    })
+
+    //GET payments
+    app.get("/payment/:id", async(req, res) =>{
+      const id = req.params.id;
+      // console.log(id)
+      const query = { _id: new ObjectId(id) }
+      const result = await courseCollection.findOne(query)
       res.send(result)
     })
 
