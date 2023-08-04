@@ -263,19 +263,21 @@ app.post("/create-payment-intent", async (req, res) => {
 /// POST payment create
 app.post("/payments", async (req, res) => {
   const payment = req.body;
-  console.log(payment);
+  // console.log(payment);
 
   const InsertResult = await paymentCollection.insertOne(payment);
 
-  const query = { _id: new ObjectId(payment.items) };
+  const query = { _id: new ObjectId(payment.items)};
+  // console.log(query)
   const deleteResult = await courseCollection.deleteOne(query);
-
   const updateDoc = {
     $set: {
       seat: parseInt(payment.seat) - 1,
     },
   };
-  const updateResult = await classCollection.updateOne(query, updateDoc);
+
+  const updateResult = await classCollection.updateOne({_id: new ObjectId(payment.classID)}, updateDoc);
+  // console.log(updateDoc, updateResult)
 
   res.send({ InsertResult, deleteResult, updateResult });
 });
@@ -286,7 +288,7 @@ app.get("/payments", async (req, res) => {
   res.send(result);
 });
 
-//GET payments
+// GET payments
 app.get("/payment/:id", async (req, res) => {
   const id = req.params.id;
   // console.log(id)
